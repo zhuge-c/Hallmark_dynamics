@@ -1,0 +1,27 @@
+function Plot_Hallmarks_Expression(Hallmarks,All_sample_X,DNB_score_dind,dt,total_t,figure_type,file_path)
+
+
+sample_num=size(All_sample_X,3);
+time_num=size(All_sample_X,2);
+gene=size(All_sample_X,1);
+
+figure('WindowState', 'maximized')
+color_order = [rand(sample_num,1),rand(sample_num,1),rand(sample_num,1)];
+
+for g=1:gene
+    temp_d=reshape(All_sample_X(g,:,:),time_num,sample_num);
+    subplot(2,5,g)
+    hold on
+    set(gca, 'ColorOrder', color_order);
+    ylabel("Hallmark level")
+    for i=1:sample_num
+        plot(dt:dt:total_t,temp_d(:,i))
+    end
+%     ylim([0,max(max(temp_d))*1.1])
+    ylim([0,1.8])
+    xlim([])
+    title(Hallmarks{g})
+    xlabel("Time")
+end
+%% print result
+% print([file_path,'Hallmark_Expression'],figure_type, '-r1200')

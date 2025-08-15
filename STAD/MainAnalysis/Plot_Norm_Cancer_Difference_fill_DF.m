@@ -1,0 +1,69 @@
+function [cross_areas, cancer_peak, nor_peak, JS_div]=Plot_Norm_Cancer_Difference_fill_DF(Hallmarks, ...
+    All_sample_X,nor_t,cancer_t,figure_type,file_path)
+gene=size(All_sample_X,1);
+
+% 'WindowState', 'maximized'
+% figure('WindowState', 'maximized')
+% figure("Position",[10,10,1200,600])
+figure
+cross_areas = zeros(gene, 1); % initial the area
+cancer_peak=zeros(gene,1);
+nor_peak=zeros(gene,1);
+JS_div=zeros(gene,1);
+
+fontSize=10;
+
+for i=1:gene
+    ax = subplot(2,5,i);
+
+    hold on
+    nor_data=reshape(All_sample_X(i,floor(nor_t/3):nor_t,1:100),1,[]);
+    cancer_data=reshape(All_sample_X(i,floor(nor_t/3+cancer_t):end,1:100),1,[]);
+    
+    [nor_pdf,nor_xi]=ksdensity(nor_data);
+    nor_area=trapz(nor_xi,nor_pdf);
+
+    [cancer_pdf,cancer_xi]=ksdensity(cancer_data);
+    cancer_area=trapz(cancer_xi,cancer_pdf);
+
+%     plot(nor_xi, nor_pdf,'k',cancer_xi,cancer_pdf,'r');
+    fill([nor_xi fliplr(nor_xi)], [nor_pdf zeros(1, length(nor_pdf))], 'b', 'LineStyle', 'none','FaceAlpha', 0.5);
+    fill([cancer_xi fliplr(cancer_xi)], [cancer_pdf zeros(1, length(cancer_pdf))], 'r', 'LineStyle', 'none','FaceAlpha', 0.5);
+    xlabel("Values",'fontsize',fontSize,'fontname','times new roman')
+    ylabel("Probability density",'fontsize',fontSize,'fontname','times new roman')
+    title(Hallmarks{i},'fontsize',fontSize,'fontname','times new roman')
+    ax=gca;
+    ax.FontSize = fontSize;
+
+    pos1 = get(ax, 'Position'); % 或者 pos1 = ax1.Position;
+    if i>5
+        new_pos1 = [pos1(1), pos1(2)+pos1(4)*0.2, pos1(3)*0.9, 0.8*pos1(4)];
+    else
+        new_pos1 = [pos1(1), pos1(2)+pos1(4)*0.1, pos1(3)*0.9, 0.8*pos1(4)];
+    end
+    set(ax, 'Position', new_pos1); 
+
+    cross_areas(i)=distribution_cross_area(nor_xi,nor_pdf,cancer_xi,cancer_pdf);
+    cancer_peak(i)=max(cancer_pdf);
+    nor_peak(i)=max(nor_pdf);
+    JS_div(i)=dl_div(nor_xi,nor_pdf,cancer_xi,cancer_pdf);
+    
+end
+legendHandle=legend("Normal","Cancer",'Location', 'northeastoutside','NumColumns',2,'fontsize',fontSize,'fontname','times new roman');
+
+% sgtitle("The distribution of Hallmarks",'fontsize',fontSize,'fontname','times new roman')
+
+set(legendHandle, 'Position', [0.25, 0.02, 0.5, 0.05], 'Units', 'normalized');
+
+
+fig = gcf;
+
+fig.PaperUnits = 'centimeters';
+width_cm = 21;
+height_cm = 10;
+fig.PaperSize = [width_cm, height_cm]; 
+fig.PaperPosition = [0, 0, width_cm, height_cm]; 
+
+print([file_path,'DF_fill'],figure_type,'-r1200')
+
+
